@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WhatsApp Dialer (+972 formatter)</title>
+  <style>
+    :root { color-scheme: light dark; --bg:#0b0c0f; --fg:#e9eef3; --card:#151923; --muted:#98a2b3; }
+    * { box-sizing: border-box; }
+    body { margin:0; font:16px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background:var(--bg); color:var(--fg); display:grid; min-height:100dvh; place-items:center; }
+    .wrap { width:min(720px, 92vw); padding:28px; background:var(--card); border-radius:16px; box-shadow: 0 8px 40px rgba(0,0,0,.45); }
+    h1 { margin:0 0 8px; font-size:clamp(20px,3vw,28px); }
+    p { margin:0 0 18px; color:var(--muted); }
+    label { display:block; margin:14px 0 6px; font-weight:600; }
+    input[type="tel"]{ width:100%; padding:14px 12px; border-radius:12px; border:1px solid #2b3242; outline:none; background:#0e1220; color:var(--fg); font-size:16px; }
+    input::placeholder{ color:#6b7280; }
+    .btn{ width:100%; margin-top:10px; padding:14px 16px; border-radius:12px; border:0; background:#2e7d32; color:#fff; font-weight:700; cursor:pointer; }
+    .btn[disabled]{ opacity:.5; cursor:not-allowed; }
+    .preview{ margin-top:10px; font-family:ui-monospace, Menlo, Consolas, monospace; color:#b3e5fc; }
+    .small{ font-size:12px; color:#9aa5b1; margin-top:4px; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <h1>WhatsApp Quick Dial (+972 formatter)</h1>
+    <p>Paste or type a number. Spaces and dashes are removed. If it doesn't start with <b>+</b>, the first leading <b>0</b> is removed and <b>+972</b> is prefixed.</p>
+
+    <label for="phone">Phone number</label>
+    <input id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="052-123-4567 or +972521234567" />
+    <div id="preview" class="preview">Formatted: —</div>
+    <div class="small">Tip: Press Enter to open WhatsApp.</div>
+    <button id="open" class="btn" disabled>Open WhatsApp</button>
+  </main>
+
+  <script>
+    const phone = document.getElementById('phone');
+    const openBtn = document.getElementById('open');
+    const preview = document.getElementById('preview');
+
+    function prepareNumber(raw){
+      if(!raw) return '';
+      const trimmed = String(raw).trim();
+      const hasPlus = /^\s*\+/.test(trimmed);
+      const cleaned = trimmed.replace(/[\s-]+/g, '');
+      if(hasPlus){
+        const digits = cleaned.replace(/^\+/, '').replace(/\D/g, '');
+        return digits ? '+' + digits : '';
+      } else {
+        let digits = cleaned.replace(/\D/g, '');
+        if(!digits) return '';
+        digits = digits.replace(/^0/, '');
+        return '+972' + digits;
+      }
+    }
+
+    function waUrlFrom(prepared){
+      return prepared && prepared.startsWith('+') ? `https://wa.me/${prepared.slice(1)}` : '';
+    }
+
+    function update(){
+      const prepared = prepareNumber(phone.value);
+      preview.textContent = 'Formatted: ' + (prepared || '—');
+      openBtn.disabled = !prepared;
+      openBtn.dataset.url = waUrlFrom(prepared);
+    }
+
+    function openWhatsApp(){
+      const url = openBtn.dataset.url;
+      if(url){ window.open(url, '_blank', 'noopener'); }
+    }
+
+    phone.addEventListener('input', update);
+    openBtn.addEventListener('click', openWhatsApp);
+    phone.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ e.preventDefault(); openWhatsApp(); }});
+
+    update();
+  </script>
+</body>
+</html>
